@@ -1,0 +1,56 @@
+﻿<UserControl x:Class="CiteU.Vues.FormulaireAjoutBatiment"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="800">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Background="#2C3E50" MinWidth="500">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Nom du Bâtiment -->
+            <StackPanel Grid.Row="0" Margin="20" Orientation="Horizontal">
+                <Label Content="Nom du Bâtiment" Foreground="White"/>
+                <TextBox x:Name="NomBatimentTextBox" Width="656" Height="30" Background="#34495E" BorderBrush="#2C3E50" Foreground="White"/>
+            </StackPanel>
+
+            <!-- Nombre d'Étages -->
+            <StackPanel Grid.Row="1" Margin="20" Orientation="Horizontal">
+                <Label Content="Nombre d'Étages" Foreground="White"/>
+                <TextBox x:Name="NombreEtagesTextBox" Width="656" Height="30" Background="#34495E" BorderBrush="#2C3E50" Foreground="White"/>
+            </StackPanel>
+
+            <!-- Nombre de Chambres par Étage -->
+            <StackPanel Grid.Row="2" Margin="20" Orientation="Horizontal">
+                <Label Content="Nombre de Chambres par Étage" Foreground="White"/>
+                <TextBox x:Name="NombreChambresParEtageTextBox" Width="656" Height="30" Background="#34495E" BorderBrush="#2C3E50" Foreground="White"/>
+            </StackPanel>
+
+            <!-- Nombre de Lits par Chambre -->
+            <StackPanel Grid.Row="3" Margin="20" Orientation="Horizontal">
+                <Label Content="Nombre de Lits par Chambre" Foreground="White"/>
+                <TextBox x:Name="NombreLitsParChambreTextBox" Width="656" Height="30" Background="#34495E" BorderBrush="#2C3E50" Foreground="White"/>
+            </StackPanel>
+
+            <!-- Prix de la Chambre -->
+            <StackPanel Grid.Row="4" Margin="20" Orientation="Horizontal">
+                <Label Content="Prix de la Chambre" Foreground="White"/>
+                <TextBox x:Name="PrixChambreTextBox" Width="656" Height="30" Background="#34495E" BorderBrush="#2C3E50" Foreground="White"/>
+            </StackPanel>
+
+            <!-- Bouton Ajouter -->
+            <Button Grid.Row="5" Content="Ajouter" Width="100" Height="40" Background="#3498DB" Foreground="White" Margin="20" Click="AjouterBatiment_Click"/>
+        </Grid>
+    </ScrollViewer>
+</UserControl>
