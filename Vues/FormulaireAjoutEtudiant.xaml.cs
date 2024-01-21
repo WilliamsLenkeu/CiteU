@@ -46,7 +46,26 @@ namespace CiteU.Vues
                 using (var context = new Model1())
                 {
                     context.EtudiantsSet.Add(nouvelEtudiant);
-                    context.SaveChanges();
+
+                    // Essayer de sauvegarder les changements
+                    try
+                    {
+                        context.SaveChanges();
+                    }
+                    catch (System.Data.Entity.Validation.DbEntityValidationException ex)
+                    {
+                        foreach (var entityValidationError in ex.EntityValidationErrors)
+                        {
+                            foreach (var validationError in entityValidationError.ValidationErrors)
+                            {
+                                Console.WriteLine($"Validation Error: Property - {validationError.PropertyName}, Error - {validationError.ErrorMessage}");
+                            }
+                        }
+
+                        // Gérer l'erreur de validation ici (vous pouvez afficher un message à l'utilisateur, logguer les erreurs, etc.)
+                        MessageBox.Show("Erreur de validation. Veuillez vérifier les données saisies.");
+                        return;
+                    }
 
                     // Attribuer une chambre et gérer la réservation et le paiement
                     AttribuerChambreReservationPaiement(context, nouvelEtudiant);
@@ -62,89 +81,11 @@ namespace CiteU.Vues
                     }
                 }
             }
-            catch (System.Data.Entity.Validation.DbEntityValidationException ex)
+            catch (Exception ex)
             {
-                foreach (var entityValidationError in ex.EntityValidationErrors)
-                {
-                    foreach (var validationError in entityValidationError.ValidationErrors)
-                    {
-                        Console.WriteLine($"Validation Error: Property - {validationError.PropertyName}, Error - {validationError.ErrorMessage}");
-                    }
-                }
-                throw; // Réexécutez l'exception pour la propager après avoir affiché les détails.
+                // Gérer l'exception générale ici (vous pouvez afficher un message à l'utilisateur, logguer l'erreur, etc.)
+                MessageBox.Show($"Erreur lors de l'ajout de l'étudiant : {ex.Message}");
             }
-        }
-
-        private ChambreSet AttribuerChambre(Model1 context, EtudiantsSet nouvelEtudiant)
-        {
-            // Créer une nouvelle réservation
-            ReservationSet nouvelleReservation = new ReservationSet
-            {
-                Date_Debut = DateTime.Now,
-                Date_Fin = DateTime.Now.AddMonths(6) // Exemple : Réservation pour 6 mois
-            };
-
-            // Attribuer une chambre à la nouvelle réservation
-            nouvelleReservation.ChambreSet = TrouverChambreDisponible(context, nouvelEtudiant);
-
-            // Associer la réservation à l'étudiant
-            nouvelEtudiant.ReservationSet = new List<ReservationSet> { nouvelleReservation };
-
-            // Ajouter l'étudiant et sa réservation à la base de données
-            context.EtudiantsSet.Add(nouvelEtudiant);
-            context.SaveChanges();
-
-            // Retourner la chambre attribuée
-            return nouvelleReservation.ChambreSet;
-        }
-
-
-        private ChambreSet TrouverChambreDisponible(Model1 context, EtudiantsSet nouvelEtudiant)
-        {
-            ChambreSet chambreAttribuee = null;
-
-            // Recherche des chambres disponibles
-            var chambresDisponibles = context.ChambreSet
-                .Include("BatimentsSet")
-                .Where(c => c.BatimentsSet.Nombre_etage > 0 && c.BatimentsSet.Nombre_Lits_Par_Chambre > 0)
-                .OrderBy(c => c.BatimentsSet.Nombre_etage)
-                .ThenBy(c => context.EtudiantsSet.Count(e => e.ReservationSet.ChambreSet.Id_Chambre == c.Id_Chambre)) // Trie par le nombre d'étudiants actuels
-                .ToList();
-
-            // Parcourir les chambres disponibles pour attribuer au nouvel étudiant
-            foreach (var chambre in chambresDisponibles)
-            {
-                // Vérifier si la capacité restante de la chambre permet d'ajouter le nouvel étudiant
-                var occupants = context.EtudiantsSet.Count(e => e.ReservationSet.ChambreSet.Id_Chambre == chambre.Id_Chambre);
-
-                if (occupants < chambre.BatimentsSet.Nombre_Lits_Par_Chambre)
-                {
-                    // Si le nouvel étudiant est handicapé, attribuer au 1er étage
-                    if (nouvelEtudiant.Handicape && chambre.BatimentsSet.Nombre_etage == 1)
-                    {
-                        chambreAttribuee = chambre;
-                        break;
-                    }
-
-                    // Si le nouvel étudiant est une fille, attribuer au 2ème étage
-                    if (nouvelEtudiant.Sexe == "F" && chambre.BatimentsSet.Nombre_etage == 2)
-                    {
-                        chambreAttribuee = chambre;
-                        break;
-                    }
-
-                    // Si le nouvel étudiant est un garçon, attribuer au 3ème étage
-                    if (nouvelEtudiant.Sexe == "M" && chambre.BatimentsSet.Nombre_etage == 3)
-                    {
-                        chambreAttribuee = chambre;
-                        break;
-                    }
-                }
-            }
-
-            // Si aucune chambre n'est trouvée, vous devrez gérer ce cas en conséquence
-
-            return chambreAttribuee;
         }
 
         private void AttribuerChambreReservationPaiement(Model1 context, EtudiantsSet nouvelEtudiant)
@@ -157,7 +98,7 @@ namespace CiteU.Vues
             {
                 Date_Debut = DateTime.Now, // Utilisez la date appropriée
                 Date_Fin = DateTime.Now.AddMonths(3), // Utilisez la date appropriée
-                ChambreId_Chambre = chambreAttribuee.Id_Chambre
+                ChambreSet = chambreAttribuee
             };
 
             // Ajoutez la réservation à la base de données
@@ -177,6 +118,77 @@ namespace CiteU.Vues
             // Ajoutez le paiement à la base de données
             context.PaimentSet.Add(nouveauPaiement);
             context.SaveChanges();
+        }
+
+
+        private ChambreSet AttribuerChambre(Model1 context, EtudiantsSet nouvelEtudiant)
+        {
+            // Créer une nouvelle réservation
+            ReservationSet nouvelleReservation = new ReservationSet
+            {
+                Date_Debut = DateTime.Now,
+                Date_Fin = DateTime.Now.AddMonths(6) // Exemple : Réservation pour 6 mois
+            };
+
+            // Attribuer une chambre à la nouvelle réservation
+            nouvelleReservation.ChambreSet = TrouverChambreDisponible(context, nouvelEtudiant);
+
+            // Ajouter la réservation à la base de données
+            context.ReservationSet.Add(nouvelleReservation);
+            context.SaveChanges();
+
+            // Retourner la chambre attribuée
+            return nouvelleReservation.ChambreSet;
+        }
+
+        private ChambreSet TrouverChambreDisponible(Model1 context, EtudiantsSet nouvelEtudiant)
+        {
+            ChambreSet chambreAttribuee = null;
+
+            // Recherche des chambres disponibles
+            var chambresDisponibles = context.ChambreSet
+                .Include("BatimentsSet")
+                .Where(c => c.BatimentsSet.Nombre_etage > 0 && c.BatimentsSet.Nombre_Lits_Par_Chambre > 0)
+                .OrderBy(c => c.BatimentsSet.Nombre_etage)
+                .ToList();
+
+            // Parcourir les chambres disponibles pour attribuer au nouvel étudiant
+            foreach (var chambre in chambresDisponibles)
+            {
+                // Vérifier si la capacité restante de la chambre permet d'ajouter le nouvel étudiant
+                var occupants = context.EtudiantsSet.Count(e => e.PaimentSet.Any(p => p.ChambreId_Chambre == chambre.Id_Chambre));
+
+                if (occupants < chambre.BatimentsSet.Nombre_Lits_Par_Chambre)
+                {
+                    // Trouver le nombre d'étages du bâtiment
+                    int nombreEtagesDuBatiment = chambre.BatimentsSet.Nombre_etage;
+
+                    // Vérifier si l'étudiant peut être attribué à l'étage approprié
+                    if ((nouvelEtudiant.Handicape && nombreEtagesDuBatiment >= 1) ||
+                        (nouvelEtudiant.Sexe == "F" && nombreEtagesDuBatiment >= 2) ||
+                        (nouvelEtudiant.Sexe == "M" && nombreEtagesDuBatiment >= 3))
+                    {
+                        chambreAttribuee = chambre;
+                        break;
+                    }
+                }
+            }
+
+            // Si aucune chambre n'est trouvée, afficher un message et gérer la suppression de la réservation et du paiement
+            if (chambreAttribuee == null)
+            {
+                MessageBox.Show("Aucune chambre disponible pour l'étudiant.");
+                var reservationsToDelete = context.ReservationSet.Where(r => r.ChambreSet == null).ToList();
+                var paiementsToDelete = context.PaimentSet.Where(p => p.ChambreId_Chambre == null).ToList();
+
+                context.ReservationSet.RemoveRange(reservationsToDelete);
+                context.PaimentSet.RemoveRange(paiementsToDelete);
+                context.SaveChanges();
+
+                throw new Exception("Aucune chambre disponible pour l'étudiant.");
+            }
+
+            return chambreAttribuee;
         }
     }
 }
