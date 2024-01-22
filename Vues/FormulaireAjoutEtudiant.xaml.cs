@@ -2,10 +2,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using CiteU.Modele;
+using Microsoft.Win32;
+using Newtonsoft.Json;
+using System.IO;
+using System.Linq;
 
 namespace CiteU.Vues
 {
@@ -16,75 +19,68 @@ namespace CiteU.Vues
             InitializeComponent();
         }
 
+        public List<EtudiantsSet> etudiantsFromJson;
+
+        private void ImporterEtudiants_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                OpenFileDialog openFileDialog = new OpenFileDialog
+                {
+                    Filter = "Fichiers JSON (*.json)|*.json|Tous les fichiers (*.*)|*.*",
+                    Title = "Sélectionnez un fichier JSON"
+                };
+
+                if (openFileDialog.ShowDialog() == true)
+                {
+                    string jsonContent = File.ReadAllText(openFileDialog.FileName);
+
+                    etudiantsFromJson = JsonConvert.DeserializeObject<List<EtudiantsSet>>(jsonContent);
+
+                    // Afficher un message de succès
+                    MessageBox.Show("Importation réussie. Les étudiants seront ajoutés lors de la prochaine opération.");
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erreur lors de l'importation des étudiants : {ex.Message}");
+            }
+        }
+
         private void AjouterEtudiant_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                // Récupérer les informations saisies par l'utilisateur
-                string nom = NomTextBox.Text;
-                string prenom = PrenomTextBox.Text;
-                DateTime? dateNaissance = DateNaissancePicker.SelectedDate;
-                string sexe = (SexeComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
-                string telephone = TelephoneTextBox.Text;
-                string email = EmailTextBox.Text;
-                bool handicape = HandicapeCheckBox.IsChecked ?? false;
-
-                // Valider les données si nécessaire
-
-                // Créer une nouvelle instance d'étudiant avec les données saisies
-                EtudiantsSet nouvelEtudiant = new EtudiantsSet
-                {
-                    Nom = nom,
-                    Niveau = "TODO: Ajouter le niveau selon vos besoins",
-                    Sexe = sexe,
-                    Age = 0, // TODO: Ajouter l'âge selon vos besoins
-                    Handicape = handicape,
-                    // Ajoutez d'autres propriétés selon vos besoins
-                };
-
-                // Ajouter l'étudiant à la base de données
                 using (var context = new Model1())
                 {
-                    context.EtudiantsSet.Add(nouvelEtudiant);
+                    // Ajouter les étudiants à la base de données
+                    foreach (var nouvelEtudiant in etudiantsFromJson)
+                    {
+                        context.EtudiantsSet.Add(nouvelEtudiant);
+
+                        // Attribuer une chambre et gérer la réservation et le paiement
+                        AttribuerChambreReservationPaiement(context, nouvelEtudiant);
+                    }
 
                     // Essayer de sauvegarder les changements
-                    try
+                    context.SaveChanges();
+
+                    // Afficher un message de succès
+                    MessageBox.Show("Ajout des étudiants réussi");
+
+                    // Rediriger vers la page d'affichage des étudiants
+                    if (Application.Current.MainWindow is MainWindow mainWindow)
                     {
-                        context.SaveChanges();
-                    }
-                    catch (System.Data.Entity.Validation.DbEntityValidationException ex)
-                    {
-                        foreach (var entityValidationError in ex.EntityValidationErrors)
+                        if (mainWindow.Content is Frame mainFrame && mainFrame.Content is MesEtudiants mesEtudiantsPage)
                         {
-                            foreach (var validationError in entityValidationError.ValidationErrors)
-                            {
-                                Console.WriteLine($"Validation Error: Property - {validationError.PropertyName}, Error - {validationError.ErrorMessage}");
-                            }
+                            mainWindow.AfficherPage(new MesEtudiants());
                         }
-
-                        // Gérer l'erreur de validation ici (vous pouvez afficher un message à l'utilisateur, logguer les erreurs, etc.)
-                        MessageBox.Show("Erreur de validation. Veuillez vérifier les données saisies.");
-                        return;
-                    }
-
-                    // Attribuer une chambre et gérer la réservation et le paiement
-                    AttribuerChambreReservationPaiement(context, nouvelEtudiant);
-                }
-
-                // Rediriger vers la page d'affichage des étudiants
-                if (Application.Current.MainWindow is MainWindow mainWindow)
-                {
-                    MessageBox.Show("L'ajout a réussi ");
-                    if (mainWindow.Content is Frame mainFrame && mainFrame.Content is MesEtudiants mesEtudiantsPage)
-                    {
-                        mainWindow.AfficherPage(new MesEtudiants());
                     }
                 }
             }
             catch (Exception ex)
             {
-                // Gérer l'exception générale ici (vous pouvez afficher un message à l'utilisateur, logguer l'erreur, etc.)
-                MessageBox.Show($"Erreur lors de l'ajout de l'étudiant : {ex.Message}");
+                MessageBox.Show($"Erreur lors de l'ajout des étudiants : {ex.Message}");
             }
         }
 
@@ -96,9 +92,9 @@ namespace CiteU.Vues
             // Créez une nouvelle réservation
             ReservationSet nouvelleReservation = new ReservationSet
             {
-                Date_Debut = DateTime.Now, // Utilisez la date appropriée
-                Date_Fin = DateTime.Now.AddMonths(3), // Utilisez la date appropriée
-                ChambreSet = chambreAttribuee
+                Date_Debut = DateTime.Now,
+                Date_Fin = DateTime.Now.AddMonths(3),
+                ChambreId_Chambre = chambreAttribuee.Id_Chambre
             };
 
             // Ajoutez la réservation à la base de données
@@ -108,8 +104,8 @@ namespace CiteU.Vues
             // Créez un paiement associé à la réservation
             PaimentSet nouveauPaiement = new PaimentSet
             {
-                Montant = chambreAttribuee.BatimentsSet.Prix_Chambre, // Utilisez le montant approprié
-                Lieu_Paiement = "TODO: Lieu de paiement selon vos besoins",
+                Montant = chambreAttribuee.BatimentsSet.Prix_Chambre,
+                Lieu_Paiement = "Societe Generale",
                 ChambreId_Chambre = chambreAttribuee.Id_Chambre,
                 ReservationId_Reservation = nouvelleReservation.Id_Reservation,
                 Etudiants_Matricule = nouvelEtudiant.Matricule
@@ -120,14 +116,13 @@ namespace CiteU.Vues
             context.SaveChanges();
         }
 
-
         private ChambreSet AttribuerChambre(Model1 context, EtudiantsSet nouvelEtudiant)
         {
             // Créer une nouvelle réservation
             ReservationSet nouvelleReservation = new ReservationSet
             {
                 Date_Debut = DateTime.Now,
-                Date_Fin = DateTime.Now.AddMonths(6) // Exemple : Réservation pour 6 mois
+                Date_Fin = DateTime.Now.AddMonths(6)
             };
 
             // Attribuer une chambre à la nouvelle réservation
@@ -156,7 +151,7 @@ namespace CiteU.Vues
             foreach (var chambre in chambresDisponibles)
             {
                 // Vérifier si la capacité restante de la chambre permet d'ajouter le nouvel étudiant
-                var occupants = context.EtudiantsSet.Count(e => e.PaimentSet.Any(p => p.ChambreId_Chambre == chambre.Id_Chambre));
+                var occupants = context.PaimentSet.Count(p => p.ChambreId_Chambre == chambre.Id_Chambre);
 
                 if (occupants < chambre.BatimentsSet.Nombre_Lits_Par_Chambre)
                 {

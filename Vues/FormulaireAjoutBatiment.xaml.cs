@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
 using CiteU.Modele;
-using System.Collections.Generic;
 
 namespace CiteU.Vues
 {
@@ -14,15 +17,70 @@ namespace CiteU.Vues
         {
             InitializeComponent();
             dbContext = new Model1(); // Initialisation du contexte de base de données
+            WireUpValidationHandlers();
+        }
+
+        private void WireUpValidationHandlers()
+        {
+            // Ajouter des gestionnaires pour la validation des champs numériques
+            NombreEtagesTextBox.PreviewTextInput += NumberValidationTextBox;
+            NombreChambresParEtageTextBox.PreviewTextInput += NumberValidationTextBox;
+            NombreLitsParChambreTextBox.PreviewTextInput += NumberValidationTextBox;
+            PrixChambreTextBox.PreviewTextInput += NumberValidationTextBox;
+
+            // Ajouter un gestionnaire pour la validation des champs vides
+            foreach (var textBox in FindVisualChildren<TextBox>(this))
+            {
+                textBox.LostFocus += TextBox_LostFocus;
+            }
+        }
+
+        // Gestionnaire d'événement pour valider les champs numériques
+        private void NumberValidationTextBox(object sender, TextCompositionEventArgs e)
+        {
+            TextBox textBox = sender as TextBox;
+            e.Handled = !IsTextAllowed(e.Text);
+        }
+
+        // Méthode pour vérifier si le texte est un nombre
+        private static bool IsTextAllowed(string text)
+        {
+            return int.TryParse(text, out _);
+        }
+
+        // Gestionnaire d'événement pour valider les champs vides
+        private void TextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            TextBox textBox = sender as TextBox;
+            if (string.IsNullOrWhiteSpace(textBox.Text))
+            {
+                MessageBox.Show("Veuillez remplir tous les champs du formulaire.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                textBox.Focus();
+            }
         }
 
         private async void AjouterBatiment_Click(object sender, RoutedEventArgs e)
         {
+            // Vérifier si tous les champs sont remplis
+            if (!AreAllFieldsFilled())
+            {
+                MessageBox.Show("Veuillez remplir tous les champs du formulaire.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
             // Récupérer les valeurs du formulaire
             string nomBatiment = NomBatimentTextBox.Text;
 
             // Assurez-vous de gérer les conversions de manière appropriée pour les champs numériques
             int nombreEtages = Convert.ToInt32(NombreEtagesTextBox.Text);
+
+            // Validation du nombre d'étages (maximum 3)
+            if (nombreEtages > 3)
+            {
+                MessageBox.Show("Un bâtiment ne peut avoir plus de 2 étages.", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
             int nombreChambresParEtage = Convert.ToInt32(NombreChambresParEtageTextBox.Text);
             int nombreLitsParChambre = Convert.ToInt32(NombreLitsParChambreTextBox.Text);
             int prixChambre = Convert.ToInt32(PrixChambreTextBox.Text);
@@ -55,7 +113,6 @@ namespace CiteU.Vues
                         {
                             Niveau = $"Étage {etage}",
                             BatimentsId_batiments = nouveauBatiment.Id_batiments,
-                            // Autres propriétés de la chambre si nécessaire
                         };
 
                         // Ajout de la nouvelle chambre à la base de données
@@ -76,6 +133,40 @@ namespace CiteU.Vues
             {
                 // Gestion des erreurs d'enregistrement
                 MessageBox.Show($"Une erreur s'est produite : {ex.Message}", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        // Méthode pour vérifier si tous les champs sont remplis
+        private bool AreAllFieldsFilled()
+        {
+            foreach (var textBox in FindVisualChildren<TextBox>(this))
+            {
+                if (string.IsNullOrWhiteSpace(textBox.Text))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Méthode pour trouver tous les enfants de type spécifié dans le visuel
+        private IEnumerable<T> FindVisualChildren<T>(DependencyObject depObj) where T : DependencyObject
+        {
+            if (depObj != null)
+            {
+                for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+                {
+                    DependencyObject child = VisualTreeHelper.GetChild(depObj, i);
+                    if (child != null && child is T)
+                    {
+                        yield return (T)child;
+                    }
+
+                    foreach (T childOfChild in FindVisualChildren<T>(child))
+                    {
+                        yield return childOfChild;
+                    }
+                }
             }
         }
     }

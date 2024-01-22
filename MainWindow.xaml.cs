@@ -6,8 +6,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using CiteU.Vues;
@@ -36,13 +34,17 @@ namespace CiteU
             IconMesEtudiants.Foreground = new SolidColorBrush(Color.FromRgb(0x3C, 0x40, 0x48));
             IconMesPayements.Foreground = new SolidColorBrush(Color.FromRgb(0x3C, 0x40, 0x48));
             IconMesChambres.Foreground = new SolidColorBrush(Color.FromRgb(0x3C, 0x40, 0x48));
-            IconHome.Foreground = new SolidColorBrush(Colors.White);
+            IconHome.Foreground = new SolidColorBrush(Colors.Black);
             ChangerCouleurBordure(btnHomeBorder);
             AfficherPage(new Mesbatiments());
         }
 
         private void btnMesEtudiants_Click(object sender, RoutedEventArgs e)
         {
+            IconHome.Foreground = new SolidColorBrush(Color.FromRgb(0x3C, 0x40, 0x48));
+            btnCreditCard.Foreground = new SolidColorBrush(Color.FromRgb(0x3C, 0x40, 0x48));
+            IconMesChambres.Foreground = new SolidColorBrush(Color.FromRgb(0x3C, 0x40, 0x48));
+            IconMesEtudiants.Foreground = new SolidColorBrush(Colors.Black);
             ChangerCouleurBordure(btnMesEtudiantsBorder);
             AfficherPage(new MesEtudiants());
         }
@@ -52,8 +54,7 @@ namespace CiteU
             IconHome.Foreground = new SolidColorBrush(Color.FromRgb(0x3C, 0x40, 0x48));
             IconMesEtudiants.Foreground = new SolidColorBrush(Color.FromRgb(0x3C, 0x40, 0x48));
             IconMesChambres.Foreground = new SolidColorBrush(Color.FromRgb(0x3C, 0x40, 0x48));
-            IconHome.Foreground = new SolidColorBrush(Color.FromRgb(0x3C, 0x40, 0x48));
-            IconMesPayements.Foreground = new SolidColorBrush(Colors.White);
+            IconMesPayements.Foreground = new SolidColorBrush(Colors.Black);
             ChangerCouleurBordure(btnCreditCardBorder);
             AfficherPage(new MesPayements());
         }
@@ -63,8 +64,7 @@ namespace CiteU
             IconHome.Foreground = new SolidColorBrush(Color.FromRgb(0x3C, 0x40, 0x48));
             IconMesPayements.Foreground = new SolidColorBrush(Color.FromRgb(0x3C, 0x40, 0x48));
             IconMesEtudiants.Foreground = new SolidColorBrush(Color.FromRgb(0x3C, 0x40, 0x48));
-            IconHome.Foreground = new SolidColorBrush(Color.FromRgb(0x3C, 0x40, 0x48));
-            IconMesChambres.Foreground = new SolidColorBrush(Colors.White);
+            IconMesChambres.Foreground = new SolidColorBrush(Colors.Black);
             ChangerCouleurBordure(btnChambreBorder);
             AfficherPage(new MesChambres());
         }
@@ -83,8 +83,7 @@ namespace CiteU
             btnHomeBorder.Background = new SolidColorBrush(Colors.Transparent);
             btnChambreBorder.Background = new SolidColorBrush(Colors.Transparent);
 
-            border.Background = new SolidColorBrush(Color.FromRgb(0x3C, 0x40, 0x48));
+            border.Background = new SolidColorBrush(Color.FromRgb(0xB0, 0xB0, 0xB0));
         }
-
     }
 }

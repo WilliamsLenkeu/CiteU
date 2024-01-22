@@ -6,7 +6,7 @@
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="800">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid Background="#2C3E50" MinWidth="500">
+        <Grid Background="#F0F0F0" MinWidth="500">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -21,36 +21,52 @@
 
             <!-- Nom du Bâtiment -->
             <StackPanel Grid.Row="0" Margin="20" Orientation="Horizontal">
-                <Label Content="Nom du Bâtiment" Foreground="White"/>
-                <TextBox x:Name="NomBatimentTextBox" Width="656" Height="30" Background="#34495E" BorderBrush="#2C3E50" Foreground="White"/>
+                <Label Content="Nom du Bâtiment" Foreground="Black"/>
+                <TextBox x:Name="NomBatimentTextBox" Width="656" Height="30" Background="White" BorderBrush="Gray" Foreground="Black"/>
             </StackPanel>
 
             <!-- Nombre d'Étages -->
             <StackPanel Grid.Row="1" Margin="20" Orientation="Horizontal">
-                <Label Content="Nombre d'Étages" Foreground="White"/>
-                <TextBox x:Name="NombreEtagesTextBox" Width="656" Height="30" Background="#34495E" BorderBrush="#2C3E50" Foreground="White"/>
+                <Label Content="Nombre d'Étages" Foreground="Black"/>
+                <TextBox x:Name="NombreEtagesTextBox" Width="656" Height="30" Background="White" BorderBrush="Gray" Foreground="Black" PreviewTextInput="NumberValidationTextBox"/>
             </StackPanel>
 
             <!-- Nombre de Chambres par Étage -->
             <StackPanel Grid.Row="2" Margin="20" Orientation="Horizontal">
-                <Label Content="Nombre de Chambres par Étage" Foreground="White"/>
-                <TextBox x:Name="NombreChambresParEtageTextBox" Width="656" Height="30" Background="#34495E" BorderBrush="#2C3E50" Foreground="White"/>
+                <Label Content="Nombre de Chambres par Étage" Foreground="Black"/>
+                <TextBox x:Name="NombreChambresParEtageTextBox" Width="656" Height="30" Background="White" BorderBrush="Gray" Foreground="Black"/>
             </StackPanel>
 
             <!-- Nombre de Lits par Chambre -->
             <StackPanel Grid.Row="3" Margin="20" Orientation="Horizontal">
-                <Label Content="Nombre de Lits par Chambre" Foreground="White"/>
-                <TextBox x:Name="NombreLitsParChambreTextBox" Width="656" Height="30" Background="#34495E" BorderBrush="#2C3E50" Foreground="White"/>
+                <Label Content="Nombre de Lits par Chambre" Foreground="Black"/>
+                <TextBox x:Name="NombreLitsParChambreTextBox" Width="656" Height="30" Background="White" BorderBrush="Gray" Foreground="Black"/>
             </StackPanel>
 
             <!-- Prix de la Chambre -->
             <StackPanel Grid.Row="4" Margin="20" Orientation="Horizontal">
-                <Label Content="Prix de la Chambre" Foreground="White"/>
-                <TextBox x:Name="PrixChambreTextBox" Width="656" Height="30" Background="#34495E" BorderBrush="#2C3E50" Foreground="White"/>
+                <Label Content="Prix de la Chambre" Foreground="Black"/>
+                <TextBox x:Name="PrixChambreTextBox" Width="656" Height="30" Background="White" BorderBrush="Gray" Foreground="Black"/>
             </StackPanel>
 
             <!-- Bouton Ajouter -->
             <Button Grid.Row="5" Content="Ajouter" Width="100" Height="40" Background="#3498DB" Foreground="White" Margin="20" Click="AjouterBatiment_Click"/>
         </Grid>
     </ScrollViewer>
+    <UserControl.Resources>
+        <Style TargetType="TextBox">
+            <Setter Property="IsEnabled" Value="True"/>
+            <Style.Triggers>
+                <EventTrigger RoutedEvent="PreviewTextInput">
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Background" Duration="0">
+                                <DiscreteObjectKeyFrame KeyTime="0" Value="{StaticResource {x:Static SystemColors.WindowBrushKey}}"/>
+                            </ObjectAnimationUsingKeyFrames>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </EventTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
 </UserControl>
